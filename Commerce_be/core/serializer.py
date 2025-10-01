@@ -2,10 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-
 from .models import User
 from django.utils import timezone
 from django.db import IntegrityError
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
@@ -21,9 +21,11 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'name',           
-            'country_code',
-            'phone_number',   
+            'username',           
+            'country',
+            'country_code',   
+            'phone_number',
+            'address',  
             'email_address',
             'password',
             'password_confirm',
@@ -38,6 +40,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('password_confirm', None)
         user = User.objects.create_user(**validated_data)
         return user
+
 
 
 class SocialRegistrationSerializer(serializers.ModelSerializer):
@@ -88,7 +91,7 @@ class UserLoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.ReadOnlyField()
+    username = serializers.ReadOnlyField()
     is_verified = serializers.ReadOnlyField()
 
     class Meta:
@@ -96,7 +99,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'username',
-            'full_name',
             'email_address',
             'name',
             'account_type',
