@@ -9,7 +9,7 @@ from django.db import IntegrityError
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
-        write_only=True, 
+        write_only=True,
         validators=[validate_password],
         style={'input_type': 'password'}
     )
@@ -21,44 +21,49 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'username',
-            'email','password', 'password_confirm'
+            'name',           
+            'country_code',
+            'phone_number',   
+            'email_address',
+            'password',
+            'password_confirm',
         ]
 
     def validate(self, attrs):
-        if not attrs.get('mobile_number'):
-            attrs['mobile_number'] = None  # Convert empty string to None
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError("Passwords don't match.")
         return attrs
 
-
-
     def create(self, validated_data):
         validated_data.pop('password_confirm', None)
         user = User.objects.create_user(**validated_data)
-        user.generate_verification_code()
         return user
 
 
 class SocialRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['username','email', 'provider', 'uid', 'photo_url']
+        fields = [
+            'name',     
+            'email_address',
+            'provider',
+            'uid',
+            'photo_url',
+        ]
         extra_kwargs = {
-            'email_address': {'validators': []}  # Disable default uniqueness validation
+            'email_address': {'validators': []}
         }
 
     def validate_email_address(self, value):
         provider = self.initial_data.get('provider')
-        if provider == 'email' and User.objects.filter(email=value).exists():
+        if provider == 'email' and User.objects.filter(email_address=value).exists():
             raise serializers.ValidationError("A user with this email already exists.")
         return value
 
     def create(self, validated_data):
         provider = validated_data.get('provider')
-        email = validated_data.get('email')
-        user = User.objects.filter(email=email).first()
+        email = validated_data.get('email_address')
+        user = User.objects.filter(email_address=email).first()
         if user:
             if user.provider != provider:
                 raise serializers.ValidationError(
@@ -77,7 +82,6 @@ class SocialRegistrationSerializer(serializers.ModelSerializer):
         except IntegrityError:
             raise serializers.ValidationError("Failed to create user due to a conflict.")
 
-
 class UserLoginSerializer(serializers.Serializer):
     email_address = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'})
@@ -90,20 +94,32 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'username','full_name', 'email', 'is_verified', 'verified_at',
-            'created_at', 'updated_at'
+            'id',
+            'username',
+            'full_name',
+            'email_address',
+            'name',
+            'account_type',
+            'country',
+            'country_code',
+            'state',
+            'address',
+            'phone_number',
+            'is_verified',
+            'verified_at',
+            'created_at',
+            'updated_at',
         ]
         read_only_fields = ['id', 'verified_at', 'created_at', 'updated_at']
 
 
 class AccountVerificationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    email_address = serializers.EmailField()
     verification_code = serializers.CharField(max_length=10)
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
+    email_address = serializers.EmailField()
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
