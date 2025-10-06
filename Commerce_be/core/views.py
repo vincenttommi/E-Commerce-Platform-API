@@ -130,7 +130,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
     tags=['Authentication'],
-    description="Register a new user account and send verification email."
+    description="Register a new user account a."
     ) 
     @action(detail=False, methods=['post'])
     def register(self, request):
@@ -141,28 +141,10 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             try:
                 user = serializer.save()
-
-                # Send verification email with error handling
-                try:
-                    email_sent = send_verification_email(
-                        to_email=user.email_address,
-                        name=user.full_name,
-                        verification_code=user.verification_code
-                    )
-                    print(f"Email sent status: {email_sent}")
-                except Exception as e:
-                    print(f"Email sending error: {str(e)}")
-                    email_sent = False
-
                 response_data = {
                     'user': UserSerializer(user).data,
                 }
-                if not email_sent:
-                    response_data['warning'] = (
-                        'Account created but verification email could not be sent. '
-                        'Please use resend verification.'
-                    )
-
+                
                 return custom_response(
                     data=response_data,
                     message='User registered successfully',
